@@ -8,6 +8,7 @@ import com.umurcan.takeaway.enums.GameStatus;
 import com.umurcan.takeaway.enums.Move;
 
 import lombok.Getter;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -18,6 +19,7 @@ public class Game {
 	private List<Player> players = new ArrayList<>();
 	private GameStatus status;
 	private int playerInTurnIndex;
+	private List<String> gameLog = new ArrayList<>();
 	
 	public Game(int gameId, int firstNumber, Player firstPlayer) {
 		if(firstNumber < 2) {
@@ -29,6 +31,7 @@ public class Game {
 		players.add(firstPlayer);
 		playerInTurnIndex = 1; // first player with the index of 0 already played when submitting the first number
 		logStatus();
+		gameLog.add(getGameStatusText());
 	}
 	
 	public synchronized void addPlayer(Player player) { 
@@ -36,23 +39,26 @@ public class Game {
 		players.add(player);
 		
 		//start game
-		//TODO : pass rule for player count
+		//TODO : pass dynamic rule for player count
 		if(players.size() > 1) {
 			players = Collections.unmodifiableList(players);
 			status = status.getNextPhase();
 			logStatus();
+			gameLog.add(getGameInfo());
 		}
 	}
 	
 	public synchronized void makeMove(Player player, Move move) {
 		validateMove(player, move);
 		
-		gameNumber = gameNumber + move.getOperation();
-		log.trace("Game id : " + gameId + ", player id : " + player.getPlayerId() + "/n"
-				+ "added : (" + move.getOperation() + "), final state : " + gameNumber);
+		val previousGameNumber = gameNumber;
+		gameNumber = (gameNumber + move.getOperation()) / 3;
+		gameLog.add(getMoveMadeText(player.getPlayerId(), move, previousGameNumber));
+		
 		//check if game ended
 		if(gameNumber == 1) {
 			status = status.getNextPhase();
+			gameLog.add(getGameInfo());
 		}
 		else {
 			playerInTurnIndex = playerInTurnIndex + 1 == players.size() ? 0 : playerInTurnIndex + 1;
@@ -61,16 +67,29 @@ public class Game {
 	}
 	
 	public synchronized String getGameInfo () {
-		StringBuilder sb = new StringBuilder().append( "Game id : " + gameId + " is now in " + status.toString() + " state." )
+		val sb = new StringBuilder().append(getGameStatusText())
 				.append(System.lineSeparator());
 		
 		if(gameNumber == 1) {
-			sb.append("Player with the id : " + players.get(playerInTurnIndex).getPlayerId() + " has won!");
+			sb.append(getGameWonText());
 		} else if (players.size() > playerInTurnIndex){
-			sb.append("Player with the id : " + players.get(playerInTurnIndex).getPlayerId() + " has the turn");
+			sb.append(getPlayerInTurnText());
 		}
 		
 		return sb.toString();
+	}
+
+	private String getGameStatusText() {
+		return "Game id : " + gameId + " is now in " + status.toString() + " state.";
+	}
+	private String getGameWonText() {
+		return "Player with the id : " + players.get(playerInTurnIndex).getPlayerId() + " has won!";
+	}
+	private String getPlayerInTurnText() {
+		return "Player with the id : " + players.get(playerInTurnIndex).getPlayerId() + " has the turn";
+	}
+	private String getMoveMadeText(int playerId, Move moveMade, int previousGameNumber) {
+		return "Player id : " + playerId + "added : (" + moveMade.getOperation() + ") to " + previousGameNumber+ ", current gameNumber : " + gameNumber;
 	}
 	
 	private void validatePlayerJoin(Player player) {

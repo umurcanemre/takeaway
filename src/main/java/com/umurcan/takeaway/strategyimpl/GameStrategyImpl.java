@@ -16,7 +16,7 @@ public class GameStrategyImpl implements GameStrategy {
 	@Override
 	public Move decideMove(int gameNumber) {
 		for(Move move : Move.values()) { 
-			if ( (gameNumber + move.getOperation() % 3) == 0) {
+			if ( (gameNumber + move.getOperation()) % 3 == 0) {
 				return move;
 			}
 		}

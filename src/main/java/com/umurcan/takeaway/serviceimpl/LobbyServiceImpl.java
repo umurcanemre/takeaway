@@ -46,4 +46,14 @@ public class LobbyServiceImpl implements LobbyService {
 		throw new NoSuchElementException("No joinable game found in lobby. Try again later or start a new game");
 	}
 
+	@Override
+	public Game getGameById(int id) {
+		val game = idGameCache.get(id);
+		if(game != null) {
+			return game;
+		} else {
+			throw new NoSuchElementException();
+		}
+	}
+
 }

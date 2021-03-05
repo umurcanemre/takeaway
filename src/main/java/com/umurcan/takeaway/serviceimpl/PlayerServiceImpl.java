@@ -5,21 +5,28 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.umurcan.takeaway.domain.Player;
 import com.umurcan.takeaway.service.PlayerService;
+import com.umurcan.takeaway.strategy.GameStrategy;
 
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 @Service
+@RequiredArgsConstructor
 public class PlayerServiceImpl implements PlayerService {
 	private final AtomicInteger playerIdCounter = new AtomicInteger(1);
 	private final Map<Integer,Player> idPlayerCache = new ConcurrentHashMap<>();
+	
+	@Autowired
+	private GameStrategy gameStrategy;
 
 	@Override
 	public Player registerPlayer() {
-		val player = new Player(playerIdCounter.getAndIncrement());
+		val player = new Player(playerIdCounter.getAndIncrement(), gameStrategy);
 		idPlayerCache.put(player.getPlayerId(), player);
 		
 		return player;

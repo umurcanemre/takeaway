@@ -6,4 +6,5 @@ import com.umurcan.takeaway.domain.Player;
 public interface LobbyService {
 	Game initializeGame(Player player, int firstNumber);
 	Game placeToGame(Player player);
+	Game getGameById(int id);
 }

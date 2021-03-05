@@ -1,5 +1,6 @@
 package com.umurcan.takeaway.service;
 
 public interface GameService {
-	void makeMove();
+	String makeMove(int gameId, int playerId);
+	String getGameLog(int gameId);
 }
