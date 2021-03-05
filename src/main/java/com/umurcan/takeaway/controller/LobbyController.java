@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.umurcan.takeaway.domain.Game;
+import com.umurcan.takeaway.enums.InputType;
 import com.umurcan.takeaway.service.LobbyService;
 import com.umurcan.takeaway.service.PlayerService;
 
@@ -21,9 +22,9 @@ public class LobbyController {
 	private PlayerService playerService;
 	
 	@PostMapping("/new")
-	public Game initiateGame(@RequestParam int playerId, @RequestParam int startNumber) {
+	public Game initiateGame(@RequestParam int playerId, @RequestParam int startNumber, @RequestParam InputType inputType) {
 		val player = playerService.getPlayerById(playerId);
-		return service.initializeGame(player, startNumber);
+		return service.initializeGame(player, startNumber, inputType);
 	}
 	
 	@PostMapping("/join")

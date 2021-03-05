@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.umurcan.takeaway.enums.GameStatus;
+import com.umurcan.takeaway.enums.InputType;
 import com.umurcan.takeaway.enums.Move;
 
 import lombok.Getter;
@@ -16,19 +17,21 @@ import lombok.extern.slf4j.Slf4j;
 public class Game {
 	private final int gameId;
 	private int gameNumber;
-	private List<Player> players = new ArrayList<>();
+	private List<Integer> playerIds = new ArrayList<>();
 	private GameStatus status;
 	private int playerInTurnIndex;
 	private List<String> gameLog = new ArrayList<>();
+	private final InputType inputType;
 	
-	public Game(int gameId, int firstNumber, Player firstPlayer) {
+	public Game(int gameId, int firstNumber, Player firstPlayer, InputType inputType) {
 		if(firstNumber < 2) {
 			throw new IllegalArgumentException("Illegal opening value : " + firstNumber);
 		}
 		this.gameId = gameId;
+		this.inputType = inputType;
 		status = GameStatus.WAITING_PLAYERS;
 		gameNumber = firstNumber;
-		players.add(firstPlayer);
+		playerIds.add(firstPlayer.getPlayerId());
 		playerInTurnIndex = 1; // first player with the index of 0 already played when submitting the first number
 		logStatus();
 		gameLog.add(getGameStatusText());
@@ -36,12 +39,12 @@ public class Game {
 	
 	public synchronized void addPlayer(Player player) { 
 		validatePlayerJoin(player);
-		players.add(player);
+		playerIds.add(player.getPlayerId());
 		
 		//start game
 		//TODO : pass dynamic rule for player count
-		if(players.size() > 1) {
-			players = Collections.unmodifiableList(players);
+		if(playerIds.size() > 1) {
+			playerIds = Collections.unmodifiableList(playerIds);
 			status = status.getNextPhase();
 			logStatus();
 			gameLog.add(getGameInfo());
@@ -61,7 +64,7 @@ public class Game {
 			gameLog.add(getGameInfo());
 		}
 		else {
-			playerInTurnIndex = playerInTurnIndex + 1 == players.size() ? 0 : playerInTurnIndex + 1;
+			playerInTurnIndex = playerInTurnIndex + 1 == playerIds.size() ? 0 : playerInTurnIndex + 1;
 		}
 		logStatus();
 	}
@@ -72,28 +75,32 @@ public class Game {
 		
 		if(gameNumber == 1) {
 			sb.append(getGameWonText());
-		} else if (players.size() > playerInTurnIndex){
+		} else if (playerIds.size() > playerInTurnIndex){
 			sb.append(getPlayerInTurnText());
 		}
 		
 		return sb.toString();
+	}
+	
+	public synchronized int getUserInTurnId() {
+		return status == GameStatus.INPROGRESS ? getPlayerIds().get(playerInTurnIndex) : -1 ;
 	}
 
 	private String getGameStatusText() {
 		return "Game id : " + gameId + " is now in " + status.toString() + " state.";
 	}
 	private String getGameWonText() {
-		return "Player with the id : " + players.get(playerInTurnIndex).getPlayerId() + " has won!";
+		return "Player with the id : " + playerIds.get(playerInTurnIndex) + " has won!";
 	}
 	private String getPlayerInTurnText() {
-		return "Player with the id : " + players.get(playerInTurnIndex).getPlayerId() + " has the turn";
+		return "Player with the id : " + playerIds.get(playerInTurnIndex) + " has the turn";
 	}
 	private String getMoveMadeText(int playerId, Move moveMade, int previousGameNumber) {
 		return "Player id : " + playerId + "added : (" + moveMade.getOperation() + ") to " + previousGameNumber+ ", current gameNumber : " + gameNumber;
 	}
 	
 	private void validatePlayerJoin(Player player) {
-		if(players.contains(player)) {
+		if(playerIds.contains(player.getPlayerId())) {
 			throw new IllegalArgumentException("Given user is already a player for this game");
 		}
 		if(!status.equals(GameStatus.WAITING_PLAYERS)) {
@@ -105,7 +112,7 @@ public class Game {
 		if(this.status == GameStatus.FINISHED) { 
 			throw new IllegalStateException("Game already ended. Cannot make any more moves.");
 		}
-		if(players.size() <= playerInTurnIndex || !player.equals(players.get(playerInTurnIndex))) {
+		if(playerIds.size() <= playerInTurnIndex || player.getPlayerId() != playerIds.get(playerInTurnIndex)) {
 			throw new IllegalArgumentException("The turn is on a different player");
 		}
 		if((gameNumber + move.getOperation()) % 3 != 0) {

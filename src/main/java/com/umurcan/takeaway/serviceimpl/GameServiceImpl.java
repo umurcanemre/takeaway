@@ -1,8 +1,12 @@
 package com.umurcan.takeaway.serviceimpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import com.umurcan.takeaway.enums.GameStatus;
+import com.umurcan.takeaway.enums.InputType;
+import com.umurcan.takeaway.event.GameMoveEvent;
 import com.umurcan.takeaway.service.GameService;
 import com.umurcan.takeaway.service.LobbyService;
 import com.umurcan.takeaway.service.PlayerService;
@@ -17,14 +21,21 @@ public class GameServiceImpl implements GameService{
 	private LobbyService lobbyService;
 	@Autowired
 	private PlayerService playerService;
+	@Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 	
 	
 	@Override
 	public String makeMove(int gameId, int playerId) {
 		val game = lobbyService.getGameById(gameId);
 		val player = playerService.getPlayerById(playerId);
+		val move = player.getStrategy().decideMove(game.getGameNumber());
 		
-		game.makeMove(player, player.getStrategy().decideMove(game.getGameNumber())); //TODO: refactor
+		game.makeMove(player, move);
+		
+		if(game.getInputType() == InputType.AUTO && game.getStatus() != GameStatus.FINISHED) {
+			applicationEventPublisher.publishEvent( new GameMoveEvent(game) );
+		}
 		
 		return game.getGameInfo();
 	}
