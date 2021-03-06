@@ -3,6 +3,10 @@ package com.umurcan.takeaway.util;
 import com.umurcan.takeaway.domain.Game;
 import com.umurcan.takeaway.enums.Move;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public abstract class GameUtils {
 
 	public static String getGameStatusText(Game game) {

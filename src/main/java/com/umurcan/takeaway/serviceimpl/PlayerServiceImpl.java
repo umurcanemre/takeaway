@@ -12,6 +12,7 @@ import com.umurcan.takeaway.domain.Player;
 import com.umurcan.takeaway.service.PlayerService;
 import com.umurcan.takeaway.strategy.GameStrategy;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
@@ -21,7 +22,7 @@ public class PlayerServiceImpl implements PlayerService {
 	private final AtomicInteger playerIdCounter = new AtomicInteger(1);
 	private final Map<Integer,Player> idPlayerCache = new ConcurrentHashMap<>();
 	
-	@Autowired
+	@Autowired @NonNull
 	private GameStrategy gameStrategy;
 
 	@Override
