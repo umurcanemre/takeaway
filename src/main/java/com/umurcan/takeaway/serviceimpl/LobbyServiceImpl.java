@@ -14,6 +14,7 @@ import com.umurcan.takeaway.domain.Player;
 import com.umurcan.takeaway.enums.InputType;
 import com.umurcan.takeaway.event.GameMoveEvent;
 import com.umurcan.takeaway.service.LobbyService;
+import com.umurcan.takeaway.ruleimpl.GameRules;
 
 import lombok.val;
 
@@ -21,6 +22,8 @@ import lombok.val;
 public class LobbyServiceImpl implements LobbyService {
 	@Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+	@Autowired
+	private GameRules gameRules;
 	
 	private final AtomicInteger gameIdCounter = new AtomicInteger(1);
 	private volatile int nextGameToPlacePlayer = 1;
@@ -29,7 +32,14 @@ public class LobbyServiceImpl implements LobbyService {
 	@Override
 	public Game initializeGame(Player player, int firstNumber, InputType inputType) {
 		val gameId = gameIdCounter.getAndIncrement();
-		val game = new Game(gameId, firstNumber, player, inputType);
+		val game = new Game.GameBuilder()
+				.withGameId(gameId)
+				.withGameNumber(firstNumber)
+				.withInputType(inputType)
+				.withPlayerId(player.getPlayerId())
+				.withGameRules(gameRules)
+				.build();
+				
 		idGameCache.put(gameId, game);
 		return game;
 	}
@@ -42,7 +52,7 @@ public class LobbyServiceImpl implements LobbyService {
 				if(game != null) {
 					game.addPlayer(player);
 					
-					if(game.getInputType() == InputType.AUTO) {
+					if(game.getInputType() == InputType.AUTO && game.getPlayerIds().size() == gameRules.getPlayerByGame()) {
 						applicationEventPublisher.publishEvent(new GameMoveEvent(game));
 					}
 					
@@ -64,7 +74,7 @@ public class LobbyServiceImpl implements LobbyService {
 		if(game != null) {
 			return game;
 		} else {
-			throw new NoSuchElementException();
+			throw new NoSuchElementException("No game with the id of " + id + " found.");
 		}
 	}
 
