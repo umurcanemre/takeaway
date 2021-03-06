@@ -25,6 +25,9 @@ public class PlayerServiceImpl implements PlayerService {
 	@Autowired @NonNull
 	private GameStrategy gameStrategy;
 
+	/**
+	 * Create a player and register to players
+	 */
 	@Override
 	public Player registerPlayer() {
 		val player = new Player(playerIdCounter.getAndIncrement(), gameStrategy);
@@ -33,6 +36,9 @@ public class PlayerServiceImpl implements PlayerService {
 		return player;
 	}
 
+	/**
+	 * Retrieve a player by it's id
+	 */
 	@Override
 	public Player getPlayerById(int id) {
 		val player = idPlayerCache.get(id);

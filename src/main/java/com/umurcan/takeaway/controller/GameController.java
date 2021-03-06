@@ -17,7 +17,7 @@ public class GameController {
 
 	@PostMapping("/makemove")
 	public String makeMove(@RequestParam int playerId, @RequestParam int gameId) {
-		return gameService.makeMove(gameId, playerId);
+		return gameService.makeMove(gameId, playerId).getGameInfo();
 	}
 	
 	@GetMapping

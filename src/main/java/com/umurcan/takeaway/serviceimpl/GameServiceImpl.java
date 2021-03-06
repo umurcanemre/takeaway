@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import com.umurcan.takeaway.domain.Game;
 import com.umurcan.takeaway.enums.GameStatus;
 import com.umurcan.takeaway.enums.InputType;
 import com.umurcan.takeaway.event.GameMoveEvent;
@@ -25,8 +26,12 @@ public class GameServiceImpl implements GameService{
     private ApplicationEventPublisher applicationEventPublisher;
 	
 	
+	/**
+	 * Makes a move on the game for given player.
+	 * If the game is automatic, will also publish the event to notify any listeners so the player that has the turn can play its turn.
+	 */
 	@Override
-	public String makeMove(int gameId, int playerId) {
+	public Game makeMove(int gameId, int playerId) {
 		val game = lobbyService.getGameById(gameId);
 		val player = playerService.getPlayerById(playerId);
 		val move = player.getStrategy().decideMove(game.getGameNumber());
@@ -37,10 +42,13 @@ public class GameServiceImpl implements GameService{
 			applicationEventPublisher.publishEvent( new GameMoveEvent(game) );
 		}
 		
-		return game.getGameInfo();
+		return game;
 	}
 
 
+	/**
+	 * Get the trace log of game in it's current state
+	 */
 	@Override
 	public String getGameLog(int gameId) {
 		val game = lobbyService.getGameById(gameId);

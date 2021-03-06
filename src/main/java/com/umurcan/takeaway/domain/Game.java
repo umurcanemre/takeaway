@@ -69,12 +69,17 @@ public class Game {
 			val game = new Game(gameId, gameNumber, inputType, rules);
 			game.getPlayerIds().add(playerId);
 			game.playerInTurnIndex = 1;// first player with the index of 0 already played when submitting the first number
-			game.logStatus();
+			game.logGameState();
 			return game;
 		}
 		
 	}
 	
+	/**
+	 * Add a  player to players of the game
+	 * Once the game has desired amount of players, it's going to mark the game in progress
+	 * @param player
+	 */
 	public synchronized void addPlayer(Player player) { 
 		rules.validatePlayerJoin(this, player);
 		playerIds.add(player.getPlayerId());
@@ -83,11 +88,16 @@ public class Game {
 		if(playerIds.size() == rules.getPlayerByGame()) {
 			playerIds = Collections.unmodifiableList(playerIds);
 			status = status.getNextPhase();
-			logStatus();
+			logGameState();
 			gameLog.add(getGameInfo());
 		}
 	}
 	
+	/**
+	 *  Makes the move on the game for the given player. Checks if the game is finished, marks the winner if so
+	 * @param player
+	 * @param move
+	 */
 	public synchronized void makeMove(Player player, Move move) {
 		rules.validateMove(this, player, move);
 		
@@ -103,9 +113,13 @@ public class Game {
 		else {
 			playerInTurnIndex = playerInTurnIndex + 1 == playerIds.size() ? 0 : playerInTurnIndex + 1;
 		}
-		logStatus();
+		logGameState();
 	}
 	
+	
+	/**
+	 * @returns a text of games current state to be logged/presented
+	 */
 	public synchronized String getGameInfo () {
 		val sb = new StringBuilder().append(GameUtils.getGameStatusText(this))
 				.append(System.lineSeparator());
@@ -123,7 +137,7 @@ public class Game {
 		return status == GameStatus.INPROGRESS ? getPlayerIds().get(playerInTurnIndex) : -1 ;
 	}
 	
-	private void logStatus() {
+	private void logGameState() {
 		log.debug(getGameInfo());
 	}
 }

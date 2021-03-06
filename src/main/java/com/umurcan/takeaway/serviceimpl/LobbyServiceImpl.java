@@ -34,6 +34,11 @@ public class LobbyServiceImpl implements LobbyService {
 	private volatile int nextGameToPlacePlayer = 1;
 	private final Map<Integer, Game> idGameCache = new ConcurrentHashMap<>();
 
+	
+	/**
+	 * Create a game in the lobby and start waiting for players to join
+	 * InputType shows whether game will be played manually via api endpoints or automatically
+	 */
 	@Override
 	public Game initializeGame(Player player, int firstNumber, InputType inputType) {
 		val gameId = gameIdCounter.getAndIncrement();
@@ -49,6 +54,10 @@ public class LobbyServiceImpl implements LobbyService {
 		return game;
 	}
 
+	/**
+	 * Places a given player to a game that's waiting for players to join
+	 * If the game is automatic and has all the players it needs, it also publishes an event the kick-off the automatic playing flow
+	 */
 	@Override
 	public Game placeToGame(Player player) {
 		for (int i = nextGameToPlacePlayer; i < gameIdCounter.get(); i++) {
@@ -66,8 +75,7 @@ public class LobbyServiceImpl implements LobbyService {
 					return game;
 				}
 			} catch (IllegalArgumentException e) {
-				// due to a possible race in requests, this game has started before the player
-				// could be placed.
+				// due to a possible race in requests, chosen game has started before the player could be placed.
 				// Checking next game
 			}
 		}
@@ -75,6 +83,9 @@ public class LobbyServiceImpl implements LobbyService {
 		throw new NoSuchElementException("No joinable game found in lobby. Try again later or start a new game");
 	}
 
+	/**
+	 * Retrieve a game by id
+	 */
 	@Override
 	public Game getGameById(int id) {
 		val game = idGameCache.get(id);
